@@ -1,6 +1,6 @@
 let actions = [];
 let value;
-let backendLink = 'https://tall-mayfly-52.localtunnel.me/';
+let backendLink = 'http://127.0.0.1:5000/';
 
 $('html').on('click', function (event) {
 
@@ -9,7 +9,7 @@ $('html').on('click', function (event) {
 
 
     value = event.target.innerText;
-    var actionType = "click";
+    let actionType = "click";
     setAction(event, actionType);
 });
 
@@ -17,23 +17,12 @@ $('input,textarea,select').on('focusout', function (event) {
     if (event.target.name === 'password') return;
 
     value = event.target.value;
-    var actionType = "focusout";
+    let actionType = "focusout";
     setAction(event, actionType);
 });
 
 //Set all the variables off the target, create an action of it
 function setAction(event, actionType) {
-    /*actions.push("id: "
-        + event.target.id + "\nclass: "
-        + event.target.className + "\nname: "
-        + event.target.name + "\nvalue: "
-        + value + "\ntimestamp: "
-        + new Date().getTime() + "\ntype:"
-        + event.target.nodeName + "\npath:"
-        + window.location.pathname + "\nparent:"
-        + JSON.stringify(getParentInfo(event.target)) + "\nmethod:"
-        + actionType + "\n\n");*/
-
     actions.push({
         id: event.target.id,
         class: event.target.className,
@@ -44,7 +33,9 @@ function setAction(event, actionType) {
         path: window.location.pathname,
         //parent: getParentInfo(event.target),
         method: actionType,
-    })
+    });
+
+    console.log(JSON.stringify(actions));
 }
 
 //Get info about the elements parent
@@ -57,10 +48,10 @@ function getParentInfo(target) {
     };
 }
 
-//Throw an error after 10 and after 15 seconds in the application
+//Throw an error after 5 and after 15 seconds in the application
 setTimeout(function () {
     addlert("Dit is een error");
-}, 10000);
+}, 5000);
 setTimeout(function () {
     addlert("Dit is een error");
 }, 15000);
@@ -107,12 +98,12 @@ window.onerror = function (message, source, lineno, colno, error) {
             'source': re.exec(source)[2],
             'position': lineno + ',' + colno,
             'stack': error.stack,
-            'actions': actions
+            'actions': JSON.stringify(actions),
         };
 
         console.log(data);
 
-        $.post("https://kind-tiger-31.localtunnel.me/error", data, function (resp) {
+        $.post(backendLink + 'error', data, function (resp) {
             console.log(resp)
         });
     }
