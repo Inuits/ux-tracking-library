@@ -1,7 +1,30 @@
 let actions = [];
 let value;
-let backendLink = 'http://127.0.0.1:5000/';
+let backendLink = 'http://localhost:5000/';
+let data;
 
+//Get a token on page load
+$(document).ready(function () {
+
+    data = {
+        name: "sportoffice",
+        key: "sportoase"
+    };
+
+    console.log("test");
+
+    $.post(backendLink + "auth", data, function (resp) {
+        alert("hallo");
+        localStorage.token = resp.access_token;
+        alert(localStorage.token);
+    }).fail(function (vara, varb, varc) {
+        console.log(varc);
+    });
+
+    
+});
+
+//Set actions on clicks and focusouts
 $('html').on('click', function (event) {
 
     if (event.target.nodeName === "BODY" || event.target.nodeName === "HTML" || event.target.nodeName === "HEADER" || event.target.nodeName === "FOOTER"
@@ -9,16 +32,14 @@ $('html').on('click', function (event) {
 
 
     value = event.target.innerText;
-    let actionType = "click";
-    setAction(event, actionType);
+    setAction(event, "click");
 });
 
 $('input,textarea,select').on('focusout', function (event) {
     if (event.target.name === 'password') return;
 
     value = event.target.value;
-    let actionType = "focusout";
-    setAction(event, actionType);
+    setAction(event, "focusout");
 });
 
 //Set all the variables off the target, create an action of it
@@ -31,20 +52,21 @@ function setAction(event, actionType) {
         timestamp: new Date().getTime(),
         type: event.target.nodeName,
         path: window.location.pathname,
-        //parent: getParentInfo(event.target),
+        parent: getParentInfo(event.target),
         method: actionType,
     });
-
-    console.log(JSON.stringify(actions));
 }
 
 //Get info about the elements parent
 function getParentInfo(target) {
+
+    targetParent = $(target).parent()[0];
+
     return {
-        'type': target.nodeName.toLowerCase(),
-        'id': target.id,
-        'class': target.className,
-        'name': target.name,
+        'type': targetParent.nodeName.toLowerCase(),
+        'id': targetParent.id,
+        'class': targetParent.className,
+        'name': targetParent.name
     };
 }
 
@@ -53,62 +75,63 @@ setTimeout(function () {
     addlert("Dit is een error");
 }, 5000);
 setTimeout(function () {
-    addlert("Dit is een error");
+    cbonsoloe.log("Dit is een error");
 }, 15000);
 
+//Post all actions before page load
+$(window).bind('beforeunload', function () {
+    sendActions("Page unload", window.location.pathname, "")
+});
+
 //Post information about the request with all the actions that happened before the request, clear the actions after it
-/*$.ajaxSetup({
-    beforeSend: function(jqXHR, request){
-        let data;
-
-        data = {
-            'type': request.type,
-            'url': request.url,
-            'data': request.data,
-            'actions': actions,
-            'timestamp': new Date().getTime()
-        };
-
+$.ajaxSetup({
+    beforeSend: function (jqXHR, request) {
         if (!request.url.startsWith(backendLink)) {
-            $.post(backendLink + "action", data, function (resp) {
-                console.log(resp)
-            }, function (var1, var2, var3) {
-                console.log(var3);
-            });
+            sendActions(request.type, request.url, request.data)
+        } else if (!request.url.includes("auth")) {
+            jqXHR.setRequestHeader("Authorization", "Bearer " + localStorage.token);
         }
-
-        actions = [];
     }
-});*/
+});
+
+//Fill in data on page load and request intercept
+function sendActions(type, url, data) {
+    postData = {
+        'type': type,
+        'url': url,
+        'data': data,
+        'actions': actions,
+        'timestamp': new Date().getTime()
+    };
+
+    postLogs(postData, "action");
+}
 
 //Post information about the error with all the actions that happened before the error, clear the actions after it
 window.onerror = function (message, source, lineno, colno, error) {
 
-    console.log("Actions happened so far:\n" + actions);
-
     let re = /https?:\/\/([^\/]*)\/(.*)/;
 
-    let data;
+    message = Math.random().toString(36).substring(7);
 
-    if (actions.length === 0) {
-        return;
-    } else {
-        data = {
-            'error': message,
-            'source': re.exec(source)[2],
-            'position': lineno + ',' + colno,
-            'stack': error.stack,
-            'actions': JSON.stringify(actions),
-        };
+    data = {
+        'error': message,
+        'source': re.exec(source)[2],
+        'position': lineno + ',' + colno,
+        'stack': error.stack,
+        'actions': JSON.stringify(actions),
+    };
 
-        console.log(data);
+    console.log(data);
+    postLogs(data, "error");
+};
 
-        $.post(backendLink + 'error', data, function (resp) {
-            console.log(resp)
-        });
-    }
-
-    //console.log("data:" + JSON.stringify(data));
+//Post data to right url
+function postLogs(data, url) {
+    $.post(backendLink + url, data, function (resp) {
+            console.log(resp);
+        }
+    );
 
     actions = [];
-};
+}
