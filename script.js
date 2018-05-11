@@ -8,15 +8,11 @@ $(document).ready(function () {
 
     data = {
         name: "sportoffice",
-        key: "sportoase"
+        key: "aslkjhfadsljhyoiubyhr"
     };
 
-    console.log("test");
-
     $.post(backendLink + "auth", data, function (resp) {
-        alert("hallo");
         localStorage.token = resp.access_token;
-        alert(localStorage.token);
     }).fail(function (vara, varb, varc) {
         console.log(varc);
     });
@@ -60,7 +56,7 @@ function setAction(event, actionType) {
 //Get info about the elements parent
 function getParentInfo(target) {
 
-    targetParent = $(target).parent()[0];
+    let targetParent = $(target).parent()[0];
 
     return {
         'type': targetParent.nodeName.toLowerCase(),
@@ -77,11 +73,6 @@ setTimeout(function () {
 setTimeout(function () {
     cbonsoloe.log("Dit is een error");
 }, 15000);
-
-//Post all actions before page load
-$(window).bind('beforeunload', function () {
-    sendActions("Page unload", window.location.pathname, "")
-});
 
 //Post information about the request with all the actions that happened before the request, clear the actions after it
 $.ajaxSetup({
