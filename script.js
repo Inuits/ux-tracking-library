@@ -8,7 +8,7 @@ $(document).ready(function () {
 
     data = {
         name: "sportoffice",
-        key: "aslkjhfadsljhyoiubyhr"
+        key: "fea2d9945b592ee9e14c3e3ffdc4cf74"
     };
 
     $.post(backendLink + "auth", data, function (resp) {
@@ -80,14 +80,6 @@ function getParentInfo(target) {
 
 }
 
-//Throw an error after 5 and after 15 seconds in the application
-setTimeout(function () {
-    addlert("Dit is een error");
-}, 5000);
-setTimeout(function () {
-    cbonsoloe.log("Dit is een error");
-}, 15000);
-
 //Post information about the request with all the actions that happened before the request, clear the actions after it
 $.ajaxSetup({
     beforeSend: function (jqXHR, request) {
@@ -110,8 +102,6 @@ function sendActions(type, url, data) {
 window.onerror = function (message, source, lineno, colno, error) {
 
     let re = /https?:\/\/([^\/]*)\/(.*)/;
-
-    message = Math.random().toString(36).substring(7);
 
     data = {
         'error': message,
