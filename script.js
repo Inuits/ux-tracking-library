@@ -14,7 +14,6 @@ $(document).ready(function () {
     $.post(backendLink + "auth", data, function (resp) {
         localStorage.token = resp.access_token;
     }).fail(function (vara, varb, varc) {
-        console.log(varc);
     });
 
     
@@ -28,6 +27,7 @@ $('html').on('click', function (event) {
 
 
     value = event.target.innerText;
+
     setAction(event, "click");
 });
 
@@ -37,6 +37,7 @@ $('input,textarea,select').on('focusout', function (event) {
     value = event.target.value;
     setAction(event, "focusout");
 });
+
 
 //Set all the variables off the target, create an action of it
 function setAction(event, actionType) {
@@ -51,6 +52,12 @@ function setAction(event, actionType) {
         parent: getParentInfo(event.target),
         method: actionType,
     });
+
+
+    //Send actions to database when there are 20
+    if ( actions.length >= 20 ){
+        sendActions("Reached actions limit", window.location.pathname, "");
+    }
 }
 
 //Get info about the elements parent
@@ -58,12 +65,19 @@ function getParentInfo(target) {
 
     let targetParent = $(target).parent()[0];
 
-    return {
-        'type': targetParent.nodeName.toLowerCase(),
-        'id': targetParent.id,
-        'class': targetParent.className,
-        'name': targetParent.name
-    };
+    if (targetParent != null) {
+        return {
+            'type': targetParent.nodeName.toLowerCase(),
+            'id': targetParent.id,
+            'class': targetParent.className,
+            'name': targetParent.name
+        };
+    } else {
+        return {
+            'parent': null
+        }
+    }
+
 }
 
 //Throw an error after 5 and after 15 seconds in the application
@@ -78,7 +92,7 @@ setTimeout(function () {
 $.ajaxSetup({
     beforeSend: function (jqXHR, request) {
         if (!request.url.startsWith(backendLink)) {
-            sendActions(request.type, request.url, request.data)
+            //sendActions(request.type, request.url, request.data)
         } else if (!request.url.includes("auth")) {
             jqXHR.setRequestHeader("Authorization", "Bearer " + localStorage.token);
         }
@@ -87,15 +101,9 @@ $.ajaxSetup({
 
 //Fill in data on page load and request intercept
 function sendActions(type, url, data) {
-    postData = {
-        'type': type,
-        'url': url,
-        'data': data,
-        'actions': actions,
-        'timestamp': new Date().getTime()
-    };
-
-    postLogs(postData, "action");
+    postLogs({
+        'actions': JSON.stringify(actions)
+    }, "action");
 }
 
 //Post information about the error with all the actions that happened before the error, clear the actions after it
@@ -110,6 +118,7 @@ window.onerror = function (message, source, lineno, colno, error) {
         'source': re.exec(source)[2],
         'position': lineno + ',' + colno,
         'stack': error.stack,
+        'timestamp': new Date().getTime(),
         'actions': JSON.stringify(actions),
     };
 
