@@ -24,3 +24,11 @@ Then build the bundle.js from script.js
 ```bash
 browserify script.js -o bundle.js
 ```
+
+### Development
+For developing with a file watcher to automatically build the bundle.js you can use `inotify-tools`
+```bash
+while inotifywait -e close_write .; do 
+    browserify script.js -o bundle.js; 
+done
+```
