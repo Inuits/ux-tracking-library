@@ -4,7 +4,7 @@
 ### Installation
 Installing the UX-tracking library consists of 2 steps:
 
-* creating a config file  
+#### 1. creating a config file  
 ~~The config file is create at the projects' root, and should be called `ux-tracker.config.yml`. 
 You can copy the .dist file from the lib's root.~~
 > This way does not work with angular projects atm, becuase they have routers that prohibit our config file to be read.
@@ -15,14 +15,27 @@ current workaround is just to define the array of config above the inclusion of 
       uxTrackingConfig = {
         appName: 'appnamehere',
         appKey: 'appkeyhere',                                            
-        backendUrl: 'backendurlhere'
+        backendUrl: 'backendurlhere',
+        sessionType: '{{SessionType}}',
+        sessionId: 'IDToGetSessionName'
       };
 </script>
 
 //include the library here
 ```
 
-* Referencing the library in you projects js/typescript/html file  
+##### SessionType
+To provide a way to organize the logs per session (which user was providing the actions) we give several options:  
+
+* LocalStorage
+* Cookies
+* More to come..
+
+The two available options are implemented by setting the `sessionType` to `localstorage` or `cookies`.
+
+The default is `cookies`.
+
+#### 2. Referencing the library in you projects .js, .ts, .html, .. file  
 ```javascript
 <script lang="javascript" src="https://bundle.inuits-ux-tracker.tk/bundle.js"></script>
 ```

@@ -1,8 +1,27 @@
 jsyaml = require('js-yaml');
-cookes = require('js-cookie');
 
 let actions = [];
-let config = uxTrackingConfig;
+let config = {
+    appName: uxTrackingConfig.appName,
+    appKey: uxTrackingConfig.appKey,
+    backendUrl: uxTrackingConfig.backendUrl
+};
+
+switch (uxTrackingConfig.sessionType) {
+    case 'localstorage':
+        config['session'] = function () {
+            return localStorage.getItem(uxTrackingConfig.sessionId)
+        };
+        break;
+    case 'cookies':
+    default:
+        cookies = require('js-cookie');
+        config['session'] = function () {
+            return cookies.get(uxTrackingConfig.sessionId)
+        };
+        break;
+}
+
 
 onReady();
 
@@ -172,7 +191,7 @@ function setAction(event, value, actionType) {
         parent: getParentInfo(event.target),
         method: actionType,
         client: config.appName,
-        session: cookes.get('currentUsername'),
+        session: config.session(),
         position: "(" + event.pageX + "," + event.pageY + ")"
     });
 
@@ -213,7 +232,7 @@ function sendActions(type, url, data) {
 //Post data to right url
 function postLogs(data, url) {
     data['client'] = config.appName;
-    data['session'] = cookes.get('currentUsername');
+    data['session'] = config.session();
 
     makePost(config.backendUrl + url, data);
 
