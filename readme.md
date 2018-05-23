@@ -11,20 +11,20 @@ You can copy the .dist file from the lib's root.~~
 
 current workaround is just to define the array of config above the inclusion of the library:
 ```javascript
-&lt;script lang="javascript">
+<script lang="javascript">
       uxTrackingConfig = {
         appName: 'appnamehere',
         appKey: 'appkeyhere',                                            
         backendUrl: 'backendurlhere'
       };
-&lt;/script>
+</script>
 
 //include the library here
 ```
 
 * Referencing the library in you projects js/typescript/html file  
 ```javascript
-&lt;script lang="javascript" src="https://bundle.inuits-ux-tracker.tk/bundle.js">&lt;/script>
+<script lang="javascript" src="https://bundle.inuits-ux-tracker.tk/bundle.js"></script>
 ```
 
 
