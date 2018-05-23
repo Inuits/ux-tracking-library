@@ -5,12 +5,26 @@
 Installing the UX-tracking library consists of 2 steps:
 
 * creating a config file  
-The config file is create at the projects' root, and should be called `ux-tracker.config.yml`. 
-You can copy the .dist file from the lib's root.
+~~The config file is create at the projects' root, and should be called `ux-tracker.config.yml`. 
+You can copy the .dist file from the lib's root.~~
+> This way does not work with angular projects atm, becuase they have routers that prohibit our config file to be read.
+
+current workaround is just to define the array of config above the inclusion of the library:
+```javascript
+&lt;script lang="javascript">
+      uxTrackingConfig = {
+        appName: 'appnamehere',
+        appKey: 'appkeyhere',                                            
+        backendUrl: 'backendurlhere'
+      };
+&lt;/script>
+
+//include the library here
+```
 
 * Referencing the library in you projects js/typescript/html file  
-```html
-&lt;script lang="javascript" src="lib/ux-tracking-library/bundle.js">&lt;/script>
+```javascript
+&lt;script lang="javascript" src="https://bundle.inuits-ux-tracker.tk/bundle.js">&lt;/script>
 ```
 
 

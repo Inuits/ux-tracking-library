@@ -2,18 +2,7 @@ jsyaml = require('js-yaml');
 cookes = require('js-cookie');
 
 let actions = [];
-let config = {};
-
-//$.get('/ux-tracker.config.yml', function (res) {
-//    config = jsyaml.load(res);
-//    onReady();
-//});
-
-config = {
-    appName: 'sportoffice',
-    appKey: 'fea2d9945b592ee9e14c3e3ffdc4cf74',
-    backendUrl: 'http://localhost:5000/'
-};
+let config = uxTrackingConfig;
 
 onReady();
 
@@ -24,12 +13,8 @@ function onReady() {
         key: config.appKey
     };
 
-    $.post(config.backendUrl + "auth", data, function (resp) {
-        localStorage.token = resp['access_token'];
-
-        console.log("here's your token: " + localStorage.token);
-    }).fail(function (vara, varb, varc) {
-        throw new Error('Unable to authenticate with ux-tracking backend.')
+    makePost(config.backendUrl + 'auth', data, function (resp) {
+        localStorage.setItem('token', resp['access_token']);
     });
 
     addHttpInterceptor();
@@ -39,6 +24,48 @@ function onReady() {
 
         return true;
     });
+
+    let originalConsoleLog = console.log;
+    console.log = function () {
+        args = [];
+        args.push('[ux-tracking] ');
+        // Note: arguments is part of the prototype
+        for (let i = 0; i < arguments.length; i++) {
+            args.push(arguments[i]);
+        }
+        originalConsoleLog.apply(console, args);
+    };
+}
+
+
+function makeGet(url) {
+    let req = new XMLHttpRequest();
+
+    req.open(url);
+    req.send();
+}
+
+function makePost(url, data, onDone = function () {
+}) {
+    let fd = new FormData();
+
+    for (let key in data) {
+        fd.append(key, data[key]);
+    }
+
+
+    let req = new XMLHttpRequest();
+
+    req.onreadystatechange = function () {
+
+        if (req.readyState === 4) {
+            onDone(JSON.parse(req.response));
+        }
+
+    };
+
+    req.open('POST', url);
+    req.send(fd);
 }
 
 
@@ -66,6 +93,7 @@ function addHttpInterceptor() {
                         });
 
 
+                        // if the request fails, post as error
                         if (this.status < 200 || this.status >= 400) {
                             let data = {
                                 'error': this.status + ' ' + this.statusText,
@@ -81,39 +109,28 @@ function addHttpInterceptor() {
 
 
                 }
-                console.log(this.request);
             }, false);
 
 
             open.apply(this, arguments);
+            if (url.startsWith(config.backendUrl)) {
+                this.setRequestHeader('Authorization', 'Bearer ' + localStorage.token);
+            }
         }
     })(XMLHttpRequest.prototype.open);
 }
 
 //Set actions on clicks and focusouts
-$('html').on('click', function (event) {
+document.addEventListener('click', function (event) {
     if (["BODY", "HTML", "HEADER", "FOOTER", "FORM", "INPUT", "TEXTAREA", "SELECT"].indexOf(event.target) > -1) return;
 
     setAction(event, event.target.innerText, "click");
 });
 
-$('input,textarea,select').on('focusout', function (event) {
+document.addEventListener('focusout', function (event) {
     if (event.target.name === 'password') return;
 
     setAction(event, event.target.value, "focusout");
-});
-
-//Post information about the request with all the actions that happened before the request, clear the actions after it
-// TODO: post the requests made
-$.ajaxSetup({
-    beforeSend: function (jqXHR, request) {
-        console.log("request registered");
-        if (!request.url.startsWith(config.backendUrl)) {
-// sendActions(request.type, request.url, request.data)
-        } else if (!request.url.includes("auth")) {
-            jqXHR.setRequestHeader("Authorization", "Bearer " + localStorage.token);
-        }
-    },
 });
 
 //Post information about the error with all the actions that happened before the error, clear the actions after it
@@ -169,7 +186,7 @@ function setAction(event, value, actionType) {
 //Get info about the elements parent
 function getParentInfo(target) {
 
-    let targetParent = $(target).parent()[0];
+    let targetParent = target.parentNode[0];
 
     if (targetParent != null) {
         return {
@@ -198,8 +215,7 @@ function postLogs(data, url) {
     data['client'] = config.appName;
     data['session'] = cookes.get('currentUsername');
 
-    $.post(config.backendUrl + url, data, function (resp) {
-    });
+    makePost(config.backendUrl + url, data);
 
     actions = [];
 }
