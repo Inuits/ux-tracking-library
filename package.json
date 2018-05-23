@@ -1,0 +1,25 @@
+{
+  "name": "ux-tracking-library",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "while inotifywait -e close_write .; do browserify script.js -o bundle.js; done",
+    "bundle": "browserify script.js -o bundle.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Inuits/ux-tracking-library.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Inuits/ux-tracking-library/issues"
+  },
+  "homepage": "https://github.com/Inuits/ux-tracking-library#readme",
+  "dependencies": {
+    "js-cookie": "^2.2.0",
+    "js-yaml": "^3.11.0"
+  }
+}
