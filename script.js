@@ -17,8 +17,9 @@ switch (uxTrackingConfig.sessionType) {
     default:
         cookies = require('js-cookie');
         config['session'] = function () {
-            return cookies.get(uxTrackingConfig.sessionId)
+            return cookies.get()[uxTrackingConfig.sessionId];
         };
+
         break;
 }
 
@@ -100,7 +101,7 @@ function addHttpInterceptor() {
 
                 if (this.readyState === 4) { //COMPLETE
 
-                    if (url.indexOf(".html") === -1 && url.indexOf(config.backendUrl) === -1) {
+                    if (url.indexOf(".html") === -1 && !url.startsWith(config.backendUrl)) {
                         actions.push({
                             method: 'REQ',
                             type: method,
@@ -149,7 +150,9 @@ document.addEventListener('click', function (event) {
 document.addEventListener('focusout', function (event) {
     if (event.target.name === 'password') return;
 
-    setAction(event, event.target.value, "focusout");
+    let value = event.target.value;
+
+    setAction(event, "" + value, "focusout");
 });
 
 //Post information about the error with all the actions that happened before the error, clear the actions after it
@@ -157,17 +160,17 @@ window.onerror = function (message, source, lineno, colno, error) {
 
     let re = /https?:\/\/([^\/]*)\/(.*)/;
 
-    alert('ERROR');
-
-    let data = {
-        'error': message,
-        'source': re.exec(source)[2],
-        'position': lineno + ',' + colno,
-        'stack': error.stack,
-        'timestamp': new Date().getTime(),
-        'actions': JSON.stringify(actions),
-    };
-    postLogs(data, "error");
+    if( !source.startsWith(config.backendUrl) ) {
+        let data = {
+            'error': message,
+            'source': re.exec(source)[2],
+            'position': lineno + ',' + colno,
+            'stack': error.stack,
+            'timestamp': new Date().getTime(),
+            'actions': JSON.stringify(actions),
+        };
+        postLogs(data, "error");
+    }
 
     return true;
 };
@@ -184,14 +187,14 @@ function setAction(event, value, actionType) {
         id: event.target.id,
         class: event.target.className,
         name: event.target.name,
-        value: value,
+        value: '' + value,
         timestamp: new Date().getTime(),
         type: event.target.nodeName,
         path: window.location.pathname,
         parent: getParentInfo(event.target),
         method: actionType,
         client: config.appName,
-        session: config.session(),
+        session: '' + config.session(),
         position: "(" + event.pageX + "," + event.pageY + ")"
     });
 
@@ -204,6 +207,8 @@ function setAction(event, value, actionType) {
 
 //Get info about the elements parent
 function getParentInfo(target) {
+
+    if( target.parentNode === null ) return;
 
     let targetParent = target.parentNode[0];
 
@@ -231,9 +236,6 @@ function sendActions(type, url, data) {
 
 //Post data to right url
 function postLogs(data, url) {
-    data['client'] = config.appName;
-    data['session'] = config.session();
-
     makePost(config.backendUrl + url, data);
 
     actions = [];
