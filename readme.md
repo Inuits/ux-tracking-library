@@ -4,7 +4,7 @@
 ## Installation
 Installing the UX-tracking library consists of 2 steps:
 
-### 1. creating a config file  
+### 1. Creating a config file  
 Define your config in the main html file for SPA's (mostly index.html in the root) or in every html file when
 when using a static web page.
 ```javascript
