@@ -100,7 +100,6 @@ function addHttpInterceptor() {
             this.addEventListener("readystatechange", function () {
 
                 if (this.readyState === 4) { //COMPLETE
-
                     if (url.indexOf(".html") === -1 && !url.startsWith(config.backendUrl)) {
                         actions.push({
                             method: 'REQ',
@@ -109,19 +108,21 @@ function addHttpInterceptor() {
                             path: window.location.pathname,
                             target: url,
                             timestamp: new Date().getTime(),
-                            client: config.appName
+                            client: config.appName,
+                            session: config.session()
                         });
 
 
                         // if the request fails, post as error
                         if (this.status < 200 || this.status >= 400) {
                             let data = {
-                                'error': this.status + ' ' + this.statusText,
-                                'source': this.responseURL,
-                                'stack': this.responseText,
-                                'timestamp': new Date().getTime(),
-                                'actions': JSON.stringify(actions),
-                                client: config.appName
+                                error: this.status + ' ' + this.statusText,
+                                source: this.responseURL,
+                                stack: this.responseText,
+                                timestamp: new Date().getTime(),
+                                actions: JSON.stringify(actions),
+                                client: config.appName,
+                                session: config.session()
                             };
                             postLogs(data, "error");
                         }
@@ -162,12 +163,14 @@ window.onerror = function (message, source, lineno, colno, error) {
 
     if( !source.startsWith(config.backendUrl) ) {
         let data = {
-            'error': message,
-            'source': re.exec(source)[2],
-            'position': lineno + ',' + colno,
-            'stack': error.stack,
-            'timestamp': new Date().getTime(),
-            'actions': JSON.stringify(actions),
+            error: message,
+            source: re.exec(source)[2],
+            position: lineno + ',' + colno,
+            stack: error.stack,
+            timestamp: new Date().getTime(),
+            actions: JSON.stringify(actions),
+            client: config.appName,
+            session: config.session()
         };
         postLogs(data, "error");
     }
