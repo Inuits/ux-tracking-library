@@ -208,11 +208,11 @@ function setAction(event, value, actionType) {
 //Get info about the elements parent
 function getParentInfo(target) {
 
-    if( target.parentNode === null ) return;
+    if( target.parentElement === null ) return;
 
-    let targetParent = target.parentNode[0];
+    let targetParent = target.parentElement;
 
-    if (targetParent != null) {
+    if (targetParent !== null) {
         return {
             'type': targetParent.nodeName.toLowerCase(),
             'id': targetParent.id,
