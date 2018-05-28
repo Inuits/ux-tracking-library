@@ -17,7 +17,7 @@ switch (uxTrackingConfig.sessionType) {
     default:
         cookies = require('js-cookie');
         config['session'] = function () {
-            return cookies.get()[uxTrackingConfig.sessionId];
+            return cookies.get(uxTrackingConfig.sessionId);
         };
 
         break;
