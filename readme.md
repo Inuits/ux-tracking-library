@@ -1,48 +1,51 @@
 # UX Tracking Library
 
 
-### Installation
+## Installation
 Installing the UX-tracking library consists of 2 steps:
 
-#### 1. creating a config file  
-~~The config file is create at the projects' root, and should be called `ux-tracker.config.yml`. 
-You can copy the .dist file from the lib's root.~~
-> This way does not work with angular projects atm, becuase they have routers that prohibit our config file to be read.
-
-current workaround is just to define the array of config above the inclusion of the library:
+### 1. creating a config file  
+Define your config in the main html file for SPA's (mostly index.html in the root) or in every html file when
+when using a static web page.
 ```javascript
 <script lang="javascript">
       uxTrackingConfig = {
         appName: 'appnamehere',
         appKey: 'appkeyhere',                                            
         backendUrl: 'backendurlhere',
-        sessionType: '{{SessionType}}',
-        sessionId: 'IDToGetSessionName'
+        sessionType: '{{ SessionType }}',
+        sessionId: '{{ sessionId }}'
       };
 </script>
 
 //include the library here
 ```
 
-##### SessionType
+#### SessionType
 To provide a way to organize the logs per session (which user was providing the actions) we give several options:  
 
 * LocalStorage
 * Cookies
 * More to come..
 
-The two available options are implemented by setting the `sessionType` to `localstorage` or `cookies`.
+The two available options are implemented by setting the `{{ sessionType }}` to `localstorage` or `cookies`.
 
 The default is `cookies`.
 
-#### 2. Referencing the library in you projects .js, .ts, .html, .. file  
+
+#### SessionId
+This is the id you used for keeping track of the currently logged in user (in a manner defined by the SessionType above).
+This could be `cookies.set('sessionId', myUsername);` or `localStorage.setItem('sessionId', myUsername);` or anything else
+available by the SessionType.
+
+### 2. Referencing the library in you projects .js, .ts, .html, .. file  
 ```javascript
 <script lang="javascript" src="https://bundle.inuits-ux-tracker.tk/bundle.js"></script>
 ```
 
 
-### Build
-Building requires the Browserify package
+## Build
+Building requires the [Browserify](http://browserify.org/) package
 ```bash
 npm install browserify -g
 ```
@@ -52,7 +55,7 @@ Then build the bundle.js from script.js
 browserify script.js -o bundle.js
 ```
 
-### Development
+## Development
 For developing with a file watcher to automatically build the bundle.js you can use `inotify-tools`
 ```bash
 while inotifywait -e close_write .; do 
