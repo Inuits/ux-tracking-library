@@ -144,17 +144,21 @@ function addHttpInterceptor() {
 
 //Set actions on clicks and focusouts
 document.addEventListener('click', function (event) {
-    if (["BODY", "HTML", "HEADER", "FOOTER", "FORM", "INPUT", "TEXTAREA", "SELECT"].indexOf(event.target) > -1) return;
+    if (["BODY", "HTML", "HEADER", "FOOTER", "FORM", "INPUT", "TEXTAREA", "SELECT"].includes(event.target.nodeName)) return;
 
     setAction(event, event.target.innerText, "click");
 });
 
 document.addEventListener('focusout', function (event) {
-    if (event.target.name === 'password') return;
+    if (["SELECT", "INPUT", "TEXTAREA"].includes(event.target.nodeName)){
+        console.log("focusout action");
+        if (event.target.name === 'password') return;
 
-    let value = event.target.value;
+        let value = event.target.value;
 
-    setAction(event, "" + value, "focusout");
+        setAction(event, "" + value, "focusout");
+    }
+
 });
 
 //Post information about the error with all the actions that happened before the error, clear the actions after it
@@ -163,9 +167,12 @@ window.onerror = function (message, source, lineno, colno, error) {
     let re = /https?:\/\/([^\/]*)\/(.*)/;
 
     if( !source.startsWith(config.backendUrl ) ) {
+        console.log("lalalala:" + re.exec(source));
+        console.log(error);
+        console.log(source);
         let data = {
             error: message,
-            source: re.exec(source)[2],
+            source: re.exec(source) !== null ? re.exec(source)[2] : '',
             position: lineno + ',' + colno,
             stack: error.stack,
             timestamp: new Date().getTime(),
@@ -187,6 +194,8 @@ window.onerror = function (message, source, lineno, colno, error) {
 //Set all the variables off the target, create an action of it
 // TODO: put action 'cache' in localstorage in stead of global variable
 function setAction(event, value, actionType) {
+    let tree = getDomPath(event.target);
+
     actions.push({
         id: event.target.id,
         class: event.target.className,
@@ -195,6 +204,7 @@ function setAction(event, value, actionType) {
         timestamp: new Date().getTime(),
         type: event.target.nodeName,
         path: window.location.pathname,
+        tree: tree.join(' > '),
         parent: getParentInfo(event.target),
         method: actionType,
         client: config.appName,
@@ -244,3 +254,32 @@ function postLogs(data, url) {
 
     actions = [];
 }
+
+//Get the full DOM tree of the clicked element
+function getDomPath(el) {
+    let stack = [];
+    while (el.parentNode != null) {
+        let sibCount = 0;
+        let sibIndex = 0;
+        for (let i = 0; i < el.parentNode.childNodes.length; i++) {
+            let sib = el.parentNode.childNodes[i];
+            if (sib.nodeName == el.nodeName) {
+                if (sib === el) {
+                    sibIndex = sibCount;
+                }
+                sibCount++;
+            }
+        }
+        if (el.hasAttribute('id') && el.id != '') {
+            stack.unshift(el.nodeName.toLowerCase() + '#' + el.id);
+        } else if (sibCount > 1) {
+            stack.unshift(el.nodeName.toLowerCase() + ':eq(' + sibIndex + ')');
+        } else {
+            stack.unshift(el.nodeName.toLowerCase());
+        }
+        el = el.parentNode;
+    }
+
+    return stack.slice(1); // removes the html element
+}
+
