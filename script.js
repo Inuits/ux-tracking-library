@@ -79,7 +79,8 @@ function makePost(url, data, onDone = function () {
     req.onreadystatechange = function () {
 
         if (req.readyState === 4) {
-            onDone(JSON.parse(req.response));
+            if(req.response)
+                onDone(JSON.parse(req.response));
         }
 
     };
@@ -161,7 +162,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
     let re = /https?:\/\/([^\/]*)\/(.*)/;
 
-    if( !source.startsWith(config.backendUrl) ) {
+    if( !source.startsWith(config.backendUrl ) ) {
         let data = {
             error: message,
             source: re.exec(source)[2],
@@ -175,7 +176,7 @@ window.onerror = function (message, source, lineno, colno, error) {
         postLogs(data, "error");
     }
 
-    return true;
+    //return true;
 };
 
 
