@@ -1,11 +1,12 @@
 jsyaml = require('js-yaml');
 
 let actions = [];
+
 let config = {
     appName: uxTrackingConfig.appName,
     appKey: uxTrackingConfig.appKey,
     backendUrl: uxTrackingConfig.backendUrl,
-    cacheSize: uxTrackingConfig.cacheSize
+    cacheSize: uxTrackingConfig.cacheSize !== null ? uxTrackingConfig.cacheSize : 10
 };
 
 switch (uxTrackingConfig.sessionType) {

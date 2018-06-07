@@ -22,7 +22,7 @@ when using a static web page.
 //include the library here
 ```
 
-#### CacheSize
+#### CacheSize (Default 10)
 
 The amount of actions you want to cache in localstorage before sending all the cached actions.
 
