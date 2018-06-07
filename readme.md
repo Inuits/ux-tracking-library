@@ -13,6 +13,7 @@ when using a static web page.
         appName: 'appnamehere',
         appKey: 'appkeyhere',                                            
         backendUrl: 'backendurlhere',
+        cacheSize: 10,
         sessionType: '{{ SessionType }}',
         sessionId: '{{ sessionId }}'
       };
@@ -20,6 +21,10 @@ when using a static web page.
 
 //include the library here
 ```
+
+#### CacheSize
+
+The amount of actions you want to cache in localstorage before sending all the cached actions.
 
 #### SessionType
 To provide a way to organize the logs per session (which user was providing the actions) we give several options:  
