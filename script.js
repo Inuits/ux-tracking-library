@@ -215,7 +215,7 @@ function setAction(event, value, actionType) {
         value: '' + value,
         timestamp: new Date().getTime(),
         type: event.target.nodeName,
-        path: window.location.pathname,
+        path: window.location.href,
         tree: tree.join(' > '),
         parent: getParentInfo(event.target),
         method: actionType,
@@ -223,6 +223,8 @@ function setAction(event, value, actionType) {
         session: '' + config.session(),
         position: "(" + event.pageX + "," + event.pageY + ")"
     });
+
+    console.log(window.location.href);
 
     localStorage.setItem("actions", JSON.stringify(actions));
 
