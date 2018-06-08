@@ -1,5 +1,3 @@
-jsyaml = require('js-yaml');
-
 let actions = [];
 let config = {
     appName: uxTrackingConfig.appName,
@@ -8,23 +6,71 @@ let config = {
 };
 
 switch (uxTrackingConfig.sessionType) {
+    default:
     case 'localstorage':
-        config['session'] = function () {
-            return localStorage.getItem(uxTrackingConfig.sessionId)
-        };
+        config['session'] = () => getStorageValue('session', uxTrackingConfig.sessionId);
         break;
     case 'cookies':
-    default:
         cookies = require('js-cookie');
-        config['session'] = function () {
-            return cookies.get(uxTrackingConfig.sessionId);
-        };
-
+        config['session'] = () => getStorageValue('cookies', uxTrackingConfig.sessionId);
         break;
 }
 
+function getStorageValue(type, id) {
+    const split = id.split('.');
+
+    let value = '';
+
+    switch (type) {
+        case 'cookies':
+            value = cookies.get(split[0]);
+            break;
+        case 'localstorage':
+        default:
+            value = localStorage.getItem(split[0]);
+            break;
+    }
+
+    if (split.length === 1) return value;
+
+    try {
+        value = JSON.parse(value);
+    } catch (e) {
+    }
+
+    for (let i = 1; i < split.length; i++) {
+        value = value[split[i]]
+    }
+
+    return value;
+}
 
 onReady();
+
+window.onerror = function (message, source, lineno, colno, error) {
+    alert('bruh');
+
+    let re = /https?:\/\/([^\/]*)\/(.*)/;
+
+    if (!source.startsWith(config.backendUrl)) {
+        console.log("lalalala:" + re.exec(source));
+        console.log(error);
+        console.log(message);
+        let data = {
+            error: message,
+            source: re.exec(source) !== null ? re.exec(source)[2] : '',
+            position: lineno + ',' + colno,
+            stack: error.stack,
+            timestamp: new Date().getTime(),
+            actions: JSON.stringify(actions),
+            client: config.appName,
+            session: config.session()
+        };
+        postLogs(data, "error");
+    }
+
+    return true;
+};
 
 // is called right after config is loaded
 function onReady() {
@@ -79,7 +125,7 @@ function makePost(url, data, onDone = function () {
     req.onreadystatechange = function () {
 
         if (req.readyState === 4) {
-            if(req.response)
+            if (req.response)
                 onDone(JSON.parse(req.response));
         }
 
@@ -150,7 +196,7 @@ document.addEventListener('click', function (event) {
 });
 
 document.addEventListener('focusout', function (event) {
-    if (["SELECT", "INPUT", "TEXTAREA"].includes(event.target.nodeName)){
+    if (["SELECT", "INPUT", "TEXTAREA"].includes(event.target.nodeName)) {
         console.log("focusout action");
         if (event.target.name === 'password') return;
 
@@ -166,7 +212,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
     let re = /https?:\/\/([^\/]*)\/(.*)/;
 
-    if( !source.startsWith(config.backendUrl ) ) {
+    if (!source.startsWith(config.backendUrl)) {
         console.log("lalalala:" + re.exec(source));
         console.log(error);
         console.log(source);
@@ -222,7 +268,7 @@ function setAction(event, value, actionType) {
 //Get info about the elements parent
 function getParentInfo(target) {
 
-    if( target.parentElement === null ) return;
+    if (target.parentElement === null) return;
 
     let targetParent = target.parentElement;
 
