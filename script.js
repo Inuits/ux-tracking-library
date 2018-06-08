@@ -4,7 +4,7 @@ let config = {
     appName: uxTrackingConfig.appName,
     appKey: uxTrackingConfig.appKey,
     backendUrl: uxTrackingConfig.backendUrl,
-    cacheSize: uxTrackingConfig.cacheSize !== null ? uxTrackingConfig.cacheSize : 10
+    cacheSize: uxTrackingConfig.cacheSize ? Math.min(uxTrackingConfig.cacheSize, 50) : 10
 };
 
 switch (uxTrackingConfig.sessionType) {
@@ -144,7 +144,6 @@ function addHttpInterceptor() {
 
                         localStorage.setItem("actionNumber", actionsNumber.toString());
 
-                        //Send actions to database when there are 10
                         if (actionsNumber >= config.cacheSize) {
                             sendActions("Reached actions limit", window.location.pathname, "");
                             localStorage.setItem("actionNumber", "0");
@@ -251,7 +250,6 @@ function setAction(event, value, actionType) {
     actionsNumber = actionsNumber + 1;
     localStorage.setItem("actionNumber", actionsNumber.toString());
 
-    //Send actions to database when there are 10
     if (actionsNumber >= config.cacheSize) {
         sendActions("Reached actions limit", window.location.pathname, "");
         localStorage.setItem("actionNumber", "0");
