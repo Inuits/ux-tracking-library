@@ -1,8 +1,10 @@
 let actions = [];
+
 let config = {
     appName: uxTrackingConfig.appName,
     appKey: uxTrackingConfig.appKey,
-    backendUrl: uxTrackingConfig.backendUrl
+    backendUrl: uxTrackingConfig.backendUrl,
+    cacheSize: uxTrackingConfig.cacheSize !== null ? uxTrackingConfig.cacheSize : 10
 };
 
 switch (uxTrackingConfig.sessionType) {
@@ -47,31 +49,6 @@ function getStorageValue(type, id) {
 
 onReady();
 
-window.onerror = function (message, source, lineno, colno, error) {
-    alert('bruh');
-
-    let re = /https?:\/\/([^\/]*)\/(.*)/;
-
-    if (!source.startsWith(config.backendUrl)) {
-        console.log("lalalala:" + re.exec(source));
-        console.log(error);
-        console.log(message);
-        let data = {
-            error: message,
-            source: re.exec(source) !== null ? re.exec(source)[2] : '',
-            position: lineno + ',' + colno,
-            stack: error.stack,
-            timestamp: new Date().getTime(),
-            actions: JSON.stringify(actions),
-            client: config.appName,
-            session: config.session()
-        };
-        postLogs(data, "error");
-    }
-
-    return true;
-};
-
 // is called right after config is loaded
 function onReady() {
     let data = {
@@ -86,8 +63,6 @@ function onReady() {
     addHttpInterceptor();
 
     document.addEventListener('error', function () {
-        alert('bruuuuuuuuh');
-
         return true;
     });
 
@@ -147,7 +122,11 @@ function addHttpInterceptor() {
             this.addEventListener("readystatechange", function () {
 
                 if (this.readyState === 4) { //COMPLETE
+                    let actionsNumber;
+
                     if (url.indexOf(".html") === -1 && !url.startsWith(config.backendUrl)) {
+                        parseActions();
+
                         actions.push({
                             method: 'REQ',
                             type: method,
@@ -159,6 +138,18 @@ function addHttpInterceptor() {
                             session: config.session()
                         });
 
+                        localStorage.setItem("actions", JSON.stringify(actions));
+                        actionsNumber = Number(localStorage.getItem("actionNumber"));
+                        actionsNumber = actionsNumber + 1;
+
+                        localStorage.setItem("actionNumber", actionsNumber.toString());
+
+                        //Send actions to database when there are 10
+                        if (actionsNumber >= config.cacheSize) {
+                            sendActions("Reached actions limit", window.location.pathname, "");
+                            localStorage.setItem("actionNumber", "0");
+                        }
+
 
                         // if the request fails, post as error
                         if (this.status < 200 || this.status >= 400) {
@@ -167,11 +158,11 @@ function addHttpInterceptor() {
                                 source: this.responseURL,
                                 stack: this.responseText,
                                 timestamp: new Date().getTime(),
-                                actions: JSON.stringify(actions),
                                 client: config.appName,
                                 session: config.session()
                             };
                             postLogs(data, "error");
+                            sendActions("Encountered an error", window.location.pathname, "")
                         }
                     }
 
@@ -197,7 +188,6 @@ document.addEventListener('click', function (event) {
 
 document.addEventListener('focusout', function (event) {
     if (["SELECT", "INPUT", "TEXTAREA"].includes(event.target.nodeName)) {
-        console.log("focusout action");
         if (event.target.name === 'password') return;
 
         let value = event.target.value;
@@ -213,43 +203,40 @@ window.onerror = function (message, source, lineno, colno, error) {
     let re = /https?:\/\/([^\/]*)\/(.*)/;
 
     if (!source.startsWith(config.backendUrl)) {
-        console.log("lalalala:" + re.exec(source));
-        console.log(error);
-        console.log(source);
         let data = {
             error: message,
             source: re.exec(source) !== null ? re.exec(source)[2] : '',
             position: lineno + ',' + colno,
             stack: error.stack,
             timestamp: new Date().getTime(),
-            actions: JSON.stringify(actions),
             client: config.appName,
             session: config.session()
         };
+
+        sendActions("Encountered an error", window.location.pathname, "")
         postLogs(data, "error");
     }
-
-    //return true;
 };
-
 
 /*****************************
  *  DATA EXTRACTION FUNCTIONS
  *****************************/
 
 //Set all the variables off the target, create an action of it
-// TODO: put action 'cache' in localstorage in stead of global variable
 function setAction(event, value, actionType) {
     let tree = getDomPath(event.target);
+    let actionsNumber;
+
+    parseActions();
 
     actions.push({
         id: event.target.id,
-        class: event.target.className,
+        class: typeof event.target.className !== 'string' ? '' : event.target.className,
         name: event.target.name,
         value: '' + value,
         timestamp: new Date().getTime(),
         type: event.target.nodeName,
-        path: window.location.pathname,
+        path: window.location.href,
         tree: tree.join(' > '),
         parent: getParentInfo(event.target),
         method: actionType,
@@ -258,10 +245,16 @@ function setAction(event, value, actionType) {
         position: "(" + event.pageX + "," + event.pageY + ")"
     });
 
+    localStorage.setItem("actions", JSON.stringify(actions));
 
-    //Send actions to database when there are 20
-    if (actions.length >= 10) {
+    actionsNumber = Number(localStorage.getItem("actionNumber"));
+    actionsNumber = actionsNumber + 1;
+    localStorage.setItem("actionNumber", actionsNumber.toString());
+
+    //Send actions to database when there are 10
+    if (actionsNumber >= config.cacheSize) {
         sendActions("Reached actions limit", window.location.pathname, "");
+        localStorage.setItem("actionNumber", "0");
     }
 }
 
@@ -290,15 +283,20 @@ function getParentInfo(target) {
 //Fill in data on page load and request intercept
 function sendActions(type, url, data) {
     postLogs({
-        'actions': JSON.stringify(actions)
+        'actions': localStorage.getItem("actions")
     }, "action");
+}
+
+function parseActions() {
+    actions = localStorage.getItem("actions") !== null ? JSON.parse(localStorage.getItem("actions")) : [];
 }
 
 //Post data to right url
 function postLogs(data, url) {
     makePost(config.backendUrl + url, data);
 
-    actions = [];
+    localStorage.removeItem("actions");
+    localStorage.setItem("actionNumber", "0");
 }
 
 //Get the full DOM tree of the clicked element
