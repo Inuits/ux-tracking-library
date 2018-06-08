@@ -145,7 +145,7 @@ function addHttpInterceptor() {
                         localStorage.setItem("actionNumber", actionsNumber.toString());
 
                         if (actionsNumber >= config.cacheSize) {
-                            sendActions("Reached actions limit", window.location.pathname, "");
+                            sendActions();
                             localStorage.setItem("actionNumber", "0");
                         }
 
@@ -161,7 +161,7 @@ function addHttpInterceptor() {
                                 session: config.session()
                             };
                             postLogs(data, "error");
-                            sendActions("Encountered an error", window.location.pathname, "")
+                            sendActions()
                         }
                     }
 
@@ -212,7 +212,7 @@ window.onerror = function (message, source, lineno, colno, error) {
             session: config.session()
         };
 
-        sendActions("Encountered an error", window.location.pathname, "")
+        sendActions()
         postLogs(data, "error");
     }
 };
@@ -235,7 +235,7 @@ function setAction(event, value, actionType) {
         value: '' + value,
         timestamp: new Date().getTime(),
         type: event.target.nodeName,
-        path: window.location.href,
+        path: window.location.pathname,
         tree: tree.join(' > '),
         parent: getParentInfo(event.target),
         method: actionType,
@@ -251,7 +251,7 @@ function setAction(event, value, actionType) {
     localStorage.setItem("actionNumber", actionsNumber.toString());
 
     if (actionsNumber >= config.cacheSize) {
-        sendActions("Reached actions limit", window.location.pathname, "");
+        sendActions();
         localStorage.setItem("actionNumber", "0");
     }
 }
@@ -279,7 +279,7 @@ function getParentInfo(target) {
 }
 
 //Fill in data on page load and request intercept
-function sendActions(type, url, data) {
+function sendActions() {
     postLogs({
         'actions': localStorage.getItem("actions")
     }, "action");
